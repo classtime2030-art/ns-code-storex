@@ -289,3 +289,84 @@ function closeCart() {
     document.getElementById('cartSidebar').classList.remove('active');
     document.getElementById('cartOverlay').classList.remove('active');
 }
+// ==========================================
+// NS CODE STORE - Part 2: Checkout, Orders & Download
+// ==========================================
+
+// ========== CHECKOUT ==========
+function checkout() {
+    if (cart.length === 0) {
+        showNotif('🛒 Cart is empty! Add products first.', 'error');
+        return;
+    }
+    
+    var total = 0;
+    for (var i = 0; i < cart.length; i++) {
+        total = total + (cart[i].price * cart[i].qty);
+    }
+    
+    var html = '';
+    
+    // Order Summary
+    html += '<h4 style="margin-bottom:15px;font-size:18px;">📋 Order Summary</h4>';
+    
+    for (var j = 0; j < cart.length; j++) {
+        var item = cart[j];
+        html += '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #334155;">';
+        html += '<span>' + item.icon + ' ' + item.name + ' × ' + item.qty + '</span>';
+        html += '<span style="color:#3b82f6;">₹' + (item.price * item.qty) + '</span>';
+        html += '</div>';
+    }
+    
+    html += '<div style="display:flex;justify-content:space-between;padding:15px 0;margin-top:10px;">';
+    html += '<strong style="font-size:18px;">Total Amount:</strong>';
+    html += '<strong style="color:#10b981;font-size:22px;">₹' + total + '</strong>';
+    html += '</div>';
+    
+    // UPI Payment Section
+    html += '<div style="background:#0f172a;padding:20px;border-radius:12px;margin:20px 0;border:2px solid #10b981;">';
+    html += '<h4 style="color:#10b981;font-size:18px;">📱 Pay via UPI</h4>';
+    html += '<p style="font-size:20px;color:#3b82f6;margin:12px 0;letter-spacing:1px;"><strong>nscodestore@upi</strong></p>';
+    html += '<button onclick="copyUPI()" style="background:#334155;color:white;border:none;padding:10px 20px;border-radius:8px;cursor:pointer;font-size:14px;">📋 Copy UPI ID</button>';
+    html += '<p style="color:#94a3b8;font-size:12px;margin-top:12px;">💡 Pay exactly <strong>₹' + total + '</strong> and upload screenshot</p>';
+    html += '</div>';
+    
+    // Screenshot Upload
+    html += '<div class="upload-box" id="screenshotBox">';
+    html += '<div style="font-size:40px;">📸</div>';
+    html += '<p style="margin:10px 0;">Tap to Upload Payment Screenshot</p>';
+    html += '<p style="color:#94a3b8;font-size:12px;">Take screenshot of successful payment</p>';
+    html += '<input type="file" id="screenshotInput" accept="image/*" onchange="previewScreenshot(this)" style="display:none;">';
+    html += '<img id="screenshotPreview" style="display:none;max-width:250px;margin:15px auto 0;border-radius:8px;border:2px solid #10b981;">';
+    html += '</div>';
+    
+    // UPI ID Input
+    html += '<div class="form-group">';
+    html += '<label>📱 Your UPI ID (for verification)</label>';
+    html += '<input type="text" id="userUpiId" placeholder="e.g., yourname@upi" style="width:100%;padding:12px;background:#0f172a;border:1px solid #334155;color:white;border-radius:8px;">';
+    html += '</div>';
+    
+    // Submit Button
+    html += '<button onclick="submitOrder()" style="width:100%;background:#10b981;color:white;border:none;padding:16px;border-radius:10px;font-size:18px;cursor:pointer;font-weight:bold;margin-top:10px;">';
+    html += '✅ Submit Payment for Verification';
+    html += '</button>';
+    
+    html += '<p style="color:#94a3b8;font-size:12px;text-align:center;margin-top:12px;">⏱️ Admin will verify within 5-10 minutes</p>';
+    html += '<p style="color:#64748b;font-size:11px;text-align:center;">Need help? WhatsApp: +91 9876543210</p>';
+    
+    document.getElementById('checkoutContent').innerHTML = html;
+    document.getElementById('checkoutModal').classList.add('active');
+    closeCart();
+    
+    // Screenshot upload click event
+    setTimeout(function() {
+        var box = document.getElementById('screenshotBox');
+        var input = document.getElementById('screenshotInput');
+        if (box && input) {
+            box.onclick = function() {
+                input.click();
+            };
+        }
+    }, 300);
+                }
+            
