@@ -369,4 +369,233 @@ function checkout() {
         }
     }, 300);
                 }
+   // ========== COPY UPI ID ==========
+function copyUPI() {
+    navigator.clipboard.writeText('nscodestore@upi').then(function() {
+        showNotif('✅ UPI ID copied! Pay using any UPI app.', 'success');
+    }).catch(function() {
+        prompt('Copy this UPI ID:', 'nscodestore@upi');
+    });
+}
+
+// ========== PREVIEW SCREENSHOT ==========
+function previewScreenshot(input) {
+    if (input.files && input.files[0]) {
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            var img = document.getElementById('screenshotPreview');
+            img.src = e.target.result;
+            img.style.display = 'block';
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+// ========== CLOSE CHECKOUT ==========
+function closeCheckout() {
+    document.getElementById('checkoutModal').classList.remove('active');
+}
+
+// ========== SUBMIT ORDER ==========
+function submitOrder() {
+    var screenshotInput = document.getElementById('screenshotInput');
+    var userUpiId = document.getElementById('userUpiId').value;
+    
+    // Check if screenshot is uploaded
+    if (!screenshotInput.files || !screenshotInput.files[0]) {
+        showNotif('❌ Please upload payment screenshot!', 'error');
+        return;
+    }
+    
+    var reader = new FileReader();
+    reader.onload = function(e) {
+        // Calculate total
+        var total = 0;
+        var itemsCopy = [];
+        
+        for (var i = 0; i < cart.length; i++) {
+            total = total + (cart[i].price * cart[i].qty);
+            itemsCopy.push({
+                id: cart[i].id,
+                name: cart[i].name,
+                price: cart[i].price,
+                icon: cart[i].icon,
+                qty: cart[i].qty
+            });
+        }
+        
+        // Create order object
+        var order = {
+            id: 'NSC' + Date.now(),
+            date: new Date().toLocaleString(),
+            items: itemsCopy,
+            total: total,
+            screenshot: e.target.result,
+            userUpiId: userUpiId,
+            status: 'pending'
+        };
+        
+        // Add to orders array
+        orders.unshift(order);
+        
+        // Clear cart
+        cart = [];
+        saveAll();
+        updateCartUI();
+        closeCheckout();
+        
+        // Show success message
+        showNotif('✅ Order #' + order.id + ' submitted! Wait for admin approval.', 'success');
+        
+        // Go to orders page
+        showPage('orders');
+    };
+    
+    reader.readAsDataURL(screenshotInput.files[0]);
+}
+
+// ========== SHOW MY ORDERS ==========
+function showMyOrders() {
+    var container = document.getElementById('myOrdersList');
+    
+    if (orders.length === 0) {
+        container.innerHTML = '<div style="text-align:center;padding:50px;"><div style="font-size:60px;">📋</div><p style="color:#94a3b8;font-size:18px;">No orders yet</p><p style="color:#64748b;">Start shopping to see your orders here!</p></div>';
+        return;
+    }
+    
+    var html = '';
+    
+    for (var i = 0; i < orders.length; i++) {
+        var order = orders[i];
+        
+        html += '<div class="order-card">';
+        
+        // Order header
+        html += '<div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:10px;">';
+        html += '<div><h4 style="font-size:18px;">Order #' + order.id + '</h4>';
+        html += '<small style="color:#94a3b8;">📅 ' + order.date + '</small></div>';
+        
+        // Status badge
+        var statusClass = 'status-' + order.status;
+        html += '<span class="' + statusClass + '">' + order.status.toUpperCase() + '</span>';
+        html += '</div>';
+        
+        // Order items
+        html += '<div style="background:#0f172a;padding:15px;border-radius:10px;margin:12px 0;">';
+        
+        for (var j = 0; j < order.items.length; j++) {
+            var item = order.items[j];
+            html += '<div style="display:flex;justify-content:space-between;padding:5px 0;">';
+            html += '<span>' + item.icon + ' ' + item.name + ' × ' + item.qty + '</span>';
+            html += '<span style="color:#3b82f6;">₹' + (item.price * item.qty) + '</span>';
+            html += '</div>';
+        }
+        
+        html += '<hr style="border-color:#334155;margin:10px 0;">';
+        html += '<div style="display:flex;justify-content:space-between;">';
+        html += '<strong>Total:</strong>';
+        html += '<strong style="color:#10b981;font-size:18px;">₹' + order.total + '</strong>';
+        html += '</div></div>';
+        
+        // Screenshot
+        if (order.screenshot) {
+            html += '<div style="margin:10px 0;">';
+            html += '<small style="color:#94a3b8;">📸 Payment Screenshot:</small><br>';
+            html += '<img src="' + order.screenshot + '" style="max-width:180px;border-radius:8px;margin-top:5px;cursor:pointer;border:1px solid #334155;" onclick="window.open(this.src)">';
+            html += '</div>';
+        }
+        
+        // Status actions
+        if (order.status === 'approved') {
+            html += '<div style="background:rgba(16,185,129,0.15);padding:15px;border-radius:10px;margin-top:12px;border:1px solid #10b981;">';
+            html += '<p style="color:#10b981;font-weight:bold;font-size:16px;">✅ Payment Verified!</p>';
+            html += '<p style="color:#94a3b8;font-size:13px;">Your files are ready to download</p>';
+            html += '<button onclick="downloadFiles(\'' + order.id + '\')" style="background:#3b82f6;color:white;border:none;padding:12px 24px;border-radius:8px;margin-top:8px;cursor:pointer;font-weight:bold;font-size:15px;">📥 Download Files</button>';
+            html += '</div>';
+        } else if (order.status === 'pending') {
+            html += '<div style="background:rgba(245,158,11,0.1);padding:12px;border-radius:8px;margin-top:12px;">';
+            html += '<p style="color:#f59e0b;">⏳ Waiting for admin verification...</p>';
+            html += '<p style="color:#94a3b8;font-size:12px;">This usually takes 5-10 minutes</p>';
+            html += '</div>';
+        } else if (order.status === 'rejected') {
+            html += '<div style="background:rgba(239,68,68,0.1);padding:12px;border-radius:8px;margin-top:12px;">';
+            html += '<p style="color:#ef4444;">❌ Payment Rejected</p>';
+            if (order.reason) {
+                html += '<p style="color:#94a3b8;font-size:13px;">Reason: ' + order.reason + '</p>';
+            }
+            html += '<p style="color:#94a3b8;font-size:12px;">Contact support or place a new order</p>';
+            html += '</div>';
+        }
+        
+        html += '</div>'; // End order-card
+    }
+    
+    container.innerHTML = html;
+}
+
+// ========== DOWNLOAD FILES (GOOGLE DRIVE) ==========
+function downloadFiles(orderId) {
+    var order = null;
+    for (var i = 0; i < orders.length; i++) {
+        if (orders[i].id === orderId) {
+            order = orders[i];
+            break;
+        }
+    }
+    
+    if (!order || order.status !== 'approved') {
+        showNotif('❌ Order not approved yet!', 'error');
+        return;
+    }
+    
+    var downloaded = 0;
+    var totalFiles = order.items.length;
+    
+    for (var j = 0; j < order.items.length; j++) {
+        var product = null;
+        for (var k = 0; k < products.length; k++) {
+            if (products[k].id === order.items[j].id) {
+                product = products[k];
+                break;
+            }
+        }
+        
+        if (product && product.downloadLink) {
+            // Open Google Drive link
+            setTimeout(function(link, name) {
+                window.open(link, '_blank');
+            }, j * 500, product.downloadLink, product.name);
             
+            downloaded++;
+            showNotif('📥 Opening: ' + product.name, 'success');
+        } else if (product && !product.downloadLink) {
+            showNotif('⚠️ No download link for: ' + product.name, 'error');
+        }
+    }
+    
+    if (downloaded > 0) {
+        setTimeout(function() {
+            showNotif('✅ ' + downloaded + '/' + totalFiles + ' files downloading! Check new tabs.', 'success');
+        }, 1000);
+    } else {
+        showNotif('❌ No download links found! Contact support.', 'error');
+    }
+}
+// ==========================================
+// NS CODE STORE - Part 3: Admin Panel
+// ==========================================
+
+// ========== ADMIN TOGGLE ==========
+function toggleAdmin() {
+    if (adminLoggedIn) {
+        adminLoggedIn = false;
+        sessionStorage.removeItem('nsAdminLogin');
+        document.getElementById('adminBtn').textContent = '🔐 Admin';
+        document.getElementById('adminBtn').style.background = '#3b82f6';
+        showPage('home');
+        showNotif('👋 Admin logged out', 'info');
+    } else {
+        showAdminLogin();
+    }
+        }
+
