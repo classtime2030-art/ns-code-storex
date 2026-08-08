@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NS Code Store - Premium Source Code</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    
+    <!-- Admin Button with Badge -->
+    <button id="adminBtn" onclick="toggleAdmin()">
+        🔐 Admin <span id="adminBadge" style="display:none;background:#ef4444;color:white;border-radius:50%;padding:2px 6px;font-size:11px;position:absolute;top:-5px;right:-5px;">0</span>
+    </button>
+
+    <!-- Notification Sound -->
+    <audio id="orderSound" src="https://www.soundjay.com/buttons/sounds/button-09.mp3" preload="auto"></audio>
+
+    <!-- Header -->
+    <header>
+        <div class="nav">
+            <h1 class="logo" onclick="showPage('home')">⚡ NS Code Store</h1>
+            <div class="nav-buttons">
+                <button onclick="showPage('home')">🏠 Home</button>
+                <button onclick="showPage('products')">📦 Products</button>
+                <button onclick="showPage('orders')">📋 My Orders</button>
+                <button onclick="openCart()">🛒 Cart (<span id="cartCount">0</span>)</button>
+                <button id="userBtn" onclick="handleUserClick()">👤 Login</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- HOME PAGE -->
+    <div id="homePage" class="page active">
+        <div class="hero">
+            <h2>🚀 Premium Source Code Marketplace</h2>
+            <p>Download HTML Templates, Web Apps, Games & Development Tools</p>
+            <p class="green-text">💳 Pay via UPI | ✅ Instant Access | 🔒 Secure Download</p>
+        </div>
+        <h3 class="section-heading">🔥 Featured Products</h3>
+        <div id="featuredProducts" class="product-grid"></div>
+    </div>
+
+    <!-- PRODUCTS PAGE -->
+    <div id="productsPage" class="page">
+        <h3 class="section-heading">📦 All Products</h3>
+        <div class="filters">
+            <select id="categoryFilter" onchange="showProducts()">
+                <option value="all">🗂️ All Categories</option>
+                <option value="html">📄 HTML Templates</option>
+                <option value="react">⚛️ React Projects</option>
+                <option value="game">🎮 Games</option>
+                <option value="tool">🔧 Tools</option>
+            </select>
+            <input type="text" id="searchBox" placeholder="🔍 Search products..." onkeyup="showProducts()">
+        </div>
+        <div id="allProducts" class="product-grid"></div>
+    </div>
+
+    <!-- ORDERS PAGE -->
+    <div id="ordersPage" class="page">
+        <h3 class="section-heading">📋 My Orders</h3>
+        <div class="upi-info-box">
+            <h4>📱 Payment Instructions</h4>
+            <p>1️⃣ Pay to UPI: <strong>nscodestore@upi</strong></p>
+            <p>2️⃣ Upload screenshot during checkout</p>
+            <p>3️⃣ Wait for admin verification (5-10 mins)</p>
+            <p>4️⃣ Download your files instantly!</p>
+        </div>
+        <div id="myOrdersList"></div>
+    </div>
+
+    <!-- PROFILE PAGE -->
+    <div id="profilePage" class="page">
+        <h3 class="section-heading">👤 My Profile</h3>
+        <div id="profileContent"></div>
+    </div>
+
+    <!-- WISHLIST PAGE -->
+    <div id="wishlistPage" class="page">
+        <h3 class="section-heading">❤️ My Wishlist</h3>
+        <div id="wishlistContent"></div>
+    </div>
+
+    <!-- ADMIN PAGE -->
+    <div id="adminPage" class="page">
+        <h3 class="section-heading">🔐 Admin Panel</h3>
+        <div class="admin-tabs">
+            <button onclick="showAdminTab('orders')" class="active-tab">📋 Orders</button>
+            <button onclick="showAdminTab('products')">📦 Products</button>
+            <button onclick="showAdminTab('users')">👥 Users</button>
+            <button onclick="showAdminTab('stats')">📊 Stats</button>
+        </div>
+        <div id="adminContent"></div>
+    </div>
+
+    <!-- CART SIDEBAR -->
+    <div id="cartOverlay" class="overlay" onclick="closeCart()"></div>
+    <div id="cartSidebar">
+        <div class="cart-header">
+            <h3>🛒 Shopping Cart</h3>
+            <button class="close-btn" onclick="closeCart()">✕</button>
+        </div>
+        <div id="cartItems"></div>
+        <div class="cart-footer">
+            <h4>Total: ₹<span id="cartTotal">0</span></h4>
+            <button class="checkout-btn" onclick="checkout()">💳 Proceed to Pay</button>
+        </div>
+    </div>
+
+    <!-- CHECKOUT MODAL -->
+    <div id="checkoutModal" class="modal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3>💳 Complete Payment</h3>
+                <button class="close-btn" onclick="closeCheckout()">✕</button>
+            </div>
+            <div id="checkoutContent"></div>
+        </div>
+    </div>
+
+    <!-- AUTH MODAL -->
+    <div id="authModal" class="modal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3 id="authTitle">🔐 Login</h3>
+                <button class="close-btn" onclick="closeAuth()">✕</button>
+            </div>
+            <div id="authContent"></div>
+        </div>
+    </div>
+
+    <!-- SCRIPTS -->
+    <script src="auth.js"></script>
+    <script src="script.js"></script>
+</body>
+  </html>
