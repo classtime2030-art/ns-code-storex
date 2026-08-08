@@ -1,2 +1,0 @@
-# ns-code-storex
-Store
