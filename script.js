@@ -897,3 +897,294 @@ function showProductForm(productId) {
     html += isEdit ? '✏️ Edit Product' : '➕ Add New Product';
     html += '</h3>';
     
+    // Name
+    html += '<div class="form-group"><label>📦 Product Name *</label>';
+    html += '<input type="text" id="prodName" value="' + (product ? product.name : '') + '" style="width:100%;padding:12px;background:#0f172a;border:1px solid #334155;color:white;border-radius:8px;"></div>';
+    
+    // Category
+    html += '<div class="form-group"><label>📂 Category *</label>';
+    html += '<select id="prodCategory" style="width:100%;padding:12px;background:#0f172a;border:1px solid #334155;color:white;border-radius:8px;">';
+    html += '<option value="html"' + (product && product.category === 'html' ? ' selected' : '') + '>📄 HTML Templates</option>';
+    html += '<option value="react"' + (product && product.category === 'react' ? ' selected' : '') + '>⚛️ React Projects</option>';
+    html += '<option value="game"' + (product && product.category === 'game' ? ' selected' : '') + '>🎮 Games</option>';
+    html += '<option value="tool"' + (product && product.category === 'tool' ? ' selected' : '') + '>🔧 Tools</option>';
+    html += '</select></div>';
+    
+    // Description
+    html += '<div class="form-group"><label>📝 Description</label>';
+    html += '<textarea id="prodDesc" rows="3" style="width:100%;padding:12px;background:#0f172a;border:1px solid #334155;color:white;border-radius:8px;">' + (product ? product.desc : '') + '</textarea></div>';
+    
+    // Icon
+    html += '<div class="form-group"><label>🎨 Icon (Emoji) *</label>';
+    html += '<input type="text" id="prodIcon" value="' + (product ? product.icon : '📦') + '" style="width:100%;padding:12px;background:#0f172a;border:1px solid #334155;color:white;border-radius:8px;"></div>';
+    
+    // Price
+    html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">';
+    html += '<div class="form-group"><label>💰 Price (₹) *</label>';
+    html += '<input type="number" id="prodPrice" value="' + (product ? product.price : '') + '" style="width:100%;padding:12px;background:#0f172a;border:1px solid #334155;color:white;border-radius:8px;"></div>';
+    html += '<div class="form-group"><label>🏷️ Sale Price (₹)</label>';
+    html += '<input type="number" id="prodSalePrice" value="' + (product && product.salePrice ? product.salePrice : '') + '" style="width:100%;padding:12px;background:#0f172a;border:1px solid #334155;color:white;border-radius:8px;"></div>';
+    html += '</div>';
+    
+    // File Name
+    html += '<div class="form-group"><label>📁 File Name</label>';
+    html += '<input type="text" id="prodFile" value="' + (product ? product.file : '') + '" placeholder="e.g., template.zip" style="width:100%;padding:12px;background:#0f172a;border:1px solid #334155;color:white;border-radius:8px;"></div>';
+    
+    // Download Link
+    html += '<div class="form-group"><label>🔗 Download Link (Google Drive) *</label>';
+    html += '<input type="text" id="prodDownloadLink" value="' + (product ? (product.downloadLink || '') : '') + '" placeholder="https://drive.google.com/file/d/..." style="width:100%;padding:12px;background:#0f172a;border:1px solid #334155;color:white;border-radius:8px;">';
+    html += '<small style="color:#f59e0b;">⚠️ Upload ZIP to Google Drive → Get shareable link → Paste here</small></div>';
+    
+    // Featured
+    html += '<div class="form-group"><label style="display:flex;align-items:center;cursor:pointer;">';
+    html += '<input type="checkbox" id="prodFeatured"' + (product && product.featured ? ' checked' : '') + ' style="margin-right:10px;width:18px;height:18px;">';
+    html += '⭐ Mark as Featured Product</label></div>';
+    
+    // Buttons
+    html += '<div style="display:flex;gap:12px;margin-top:25px;">';
+    if (isEdit) {
+        html += '<button onclick="updateProduct(' + productId + ')" style="background:#10b981;color:white;border:none;padding:14px;border-radius:10px;flex:1;cursor:pointer;font-weight:bold;font-size:15px;">✅ Update Product</button>';
+    } else {
+        html += '<button onclick="addNewProduct()" style="background:#10b981;color:white;border:none;padding:14px;border-radius:10px;flex:1;cursor:pointer;font-weight:bold;font-size:15px;">✅ Add Product</button>';
+    }
+    html += '<button onclick="closeProductForm()" style="background:#334155;color:white;border:none;padding:14px;border-radius:10px;flex:1;cursor:pointer;font-size:15px;">Cancel</button>';
+    html += '</div>';
+    
+    html += '</div>';
+    
+    modal.innerHTML = html;
+    document.body.appendChild(modal);
+    
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) modal.remove();
+    });
+}
+
+function closeProductForm() {
+    var modal = document.getElementById('productFormModal');
+    if (modal) modal.remove();
+}
+// ========== ADD NEW PRODUCT ==========
+function addNewProduct() {
+    var name = document.getElementById('prodName').value.trim();
+    var category = document.getElementById('prodCategory').value;
+    var desc = document.getElementById('prodDesc').value.trim();
+    var icon = document.getElementById('prodIcon').value.trim() || '📦';
+    var price = parseFloat(document.getElementById('prodPrice').value);
+    var salePriceValue = document.getElementById('prodSalePrice').value;
+    var file = document.getElementById('prodFile').value.trim();
+    var downloadLink = document.getElementById('prodDownloadLink').value.trim();
+    var featured = document.getElementById('prodFeatured').checked;
+    
+    if (!name || !price) {
+        showNotif('❌ Please fill Name and Price!', 'error');
+        return;
+    }
+    
+    if (!downloadLink) {
+        showNotif('⚠️ Please add Google Drive download link!', 'error');
+        return;
+    }
+    
+    var newProduct = {
+        id: Date.now(),
+        name: name,
+        category: category,
+        desc: desc || 'No description',
+        price: price,
+        salePrice: salePriceValue ? parseFloat(salePriceValue) : null,
+        icon: icon,
+        featured: featured,
+        file: file || 'product.zip',
+        downloadLink: downloadLink
+    };
+    
+    products.push(newProduct);
+    saveAll();
+    closeProductForm();
+    showAdminProducts();
+    showProducts();
+    showNotif('✅ Product added successfully!', 'success');
+}
+
+// ========== UPDATE PRODUCT ==========
+function updateProduct(productId) {
+    var index = -1;
+    for (var i = 0; i < products.length; i++) {
+        if (products[i].id === productId) {
+            index = i;
+            break;
+        }
+    }
+    
+    if (index === -1) return;
+    
+    var name = document.getElementById('prodName').value.trim();
+    var category = document.getElementById('prodCategory').value;
+    var desc = document.getElementById('prodDesc').value.trim();
+    var icon = document.getElementById('prodIcon').value.trim() || '📦';
+    var price = parseFloat(document.getElementById('prodPrice').value);
+    var salePriceValue = document.getElementById('prodSalePrice').value;
+    var file = document.getElementById('prodFile').value.trim();
+    var downloadLink = document.getElementById('prodDownloadLink').value.trim();
+    var featured = document.getElementById('prodFeatured').checked;
+    
+    if (!name || !price) {
+        showNotif('❌ Please fill Name and Price!', 'error');
+        return;
+    }
+    
+    products[index].name = name;
+    products[index].category = category;
+    products[index].desc = desc || 'No description';
+    products[index].price = price;
+    products[index].salePrice = salePriceValue ? parseFloat(salePriceValue) : null;
+    products[index].icon = icon;
+    products[index].featured = featured;
+    products[index].file = file || products[index].file;
+    products[index].downloadLink = downloadLink || products[index].downloadLink || '';
+    
+    saveAll();
+    closeProductForm();
+    showAdminProducts();
+    showProducts();
+    showNotif('✅ Product updated!', 'success');
+}
+
+// ========== DELETE PRODUCT ==========
+function deleteProduct(productId) {
+    var product = null;
+    for (var i = 0; i < products.length; i++) {
+        if (products[i].id === productId) {
+            product = products[i];
+            break;
+        }
+    }
+    
+    if (!product) return;
+    
+    if (!confirm('🗑️ Delete "' + product.name + '"?\n\nThis cannot be undone!')) return;
+    
+    var newProducts = [];
+    for (var j = 0; j < products.length; j++) {
+        if (products[j].id !== productId) {
+            newProducts.push(products[j]);
+        }
+    }
+    products = newProducts;
+    
+    saveAll();
+    showAdminProducts();
+    showProducts();
+    showNotif('🗑️ Product deleted!', 'error');
+}
+
+// ========== ADMIN USERS ==========
+function showAdminUsers() {
+    var content = document.getElementById('adminContent');
+    
+    var html = '<h4 style="margin-bottom:20px;font-size:18px;">👥 Registered Users (' + users.length + ')</h4>';
+    
+    if (users.length === 0) {
+        html += '<p style="color:#94a3b8;text-align:center;padding:30px;">No users registered yet</p>';
+    } else {
+        html += '<div style="overflow-x:auto;"><table>';
+        html += '<thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Orders</th><th>Joined</th><th>Role</th></tr></thead><tbody>';
+        
+        for (var i = 0; i < users.length; i++) {
+            var u = users[i];
+            var userOrderCount = 0;
+            for (var j = 0; j < orders.length; j++) {
+                if (orders[j].userId === u.id) userOrderCount++;
+            }
+            
+            html += '<tr>';
+            html += '<td><strong>' + u.name + '</strong></td>';
+            html += '<td>' + u.email + '</td>';
+            html += '<td>' + u.phone + '</td>';
+            html += '<td>' + userOrderCount + '</td>';
+            html += '<td>' + u.joinDate + '</td>';
+            html += '<td>' + (u.isAdmin ? '👑 Admin' : '👤 User') + '</td>';
+            html += '</tr>';
+        }
+        
+        html += '</tbody></table></div>';
+    }
+    
+    content.innerHTML = html;
+}
+
+// ========== ADMIN STATS ==========
+function showAdminStats() {
+    var content = document.getElementById('adminContent');
+    
+    var totalOrders = orders.length;
+    var pendingOrders = 0;
+    var approvedOrders = 0;
+    var rejectedOrders = 0;
+    var totalRevenue = 0;
+    
+    for (var i = 0; i < orders.length; i++) {
+        if (orders[i].status === 'pending') pendingOrders++;
+        if (orders[i].status === 'approved') {
+            approvedOrders++;
+            totalRevenue = totalRevenue + orders[i].total;
+        }
+        if (orders[i].status === 'rejected') rejectedOrders++;
+    }
+    
+    var html = '';
+    
+    html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;margin-bottom:25px;">';
+    
+    html += '<div style="background:#1e293b;padding:25px;border-radius:12px;text-align:center;border:1px solid #334155;"><div style="font-size:45px;">📦</div><h2 style="color:white;margin:10px 0;">' + totalOrders + '</h2><p style="color:#94a3b8;">Total Orders</p></div>';
+    html += '<div style="background:#1e293b;padding:25px;border-radius:12px;text-align:center;border:1px solid #334155;"><div style="font-size:45px;">📚</div><h2 style="color:white;margin:10px 0;">' + products.length + '</h2><p style="color:#94a3b8;">Products</p></div>';
+    html += '<div style="background:#1e293b;padding:25px;border-radius:12px;text-align:center;border:1px solid #334155;"><div style="font-size:45px;">💰</div><h2 style="color:#10b981;margin:10px 0;">₹' + totalRevenue + '</h2><p style="color:#94a3b8;">Revenue</p></div>';
+    html += '<div style="background:#1e293b;padding:25px;border-radius:12px;text-align:center;border:1px solid #334155;"><div style="font-size:45px;">👥</div><h2 style="color:#3b82f6;margin:10px 0;">' + users.length + '</h2><p style="color:#94a3b8;">Users</p></div>';
+    
+    html += '</div>';
+    
+    html += '<div style="background:#1e293b;padding:20px;border-radius:12px;border:1px solid #334155;">';
+    html += '<h4 style="margin-bottom:15px;">📊 Recent Orders</h4>';
+    
+    if (orders.length === 0) {
+        html += '<p style="color:#94a3b8;">No orders yet</p>';
+    } else {
+        var recentOrders = orders.slice(0, 5);
+        for (var k = 0; k < recentOrders.length; k++) {
+            var order = recentOrders[k];
+            var statusColor = order.status === 'approved' ? '#10b981' : order.status === 'pending' ? '#f59e0b' : '#ef4444';
+            
+            html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #334155;">';
+            html += '<div><span style="color:#3b82f6;">#' + order.id + '</span><br><small style="color:#94a3b8;">' + order.date + '</small></div>';
+            html += '<span style="color:#10b981;font-weight:bold;">₹' + order.total + '</span>';
+            html += '<span style="color:' + statusColor + ';font-weight:bold;font-size:13px;">' + order.status.toUpperCase() + '</span>';
+            html += '</div>';
+        }
+    }
+    
+    html += '</div>';
+    
+    content.innerHTML = html;
+}
+
+// ========== INITIALIZATION ==========
+window.onload = function() {
+    if (sessionStorage.getItem('nsAdminLogin') === 'true') {
+        adminLoggedIn = true;
+        document.getElementById('adminBtn').textContent = '🔓 Exit Admin';
+        document.getElementById('adminBtn').style.background = '#10b981';
+    }
+    
+    showProducts();
+    updateCartUI();
+    updateAdminBadge();
+};
+
+console.log('🚀 NS Code Store v4.0 Ready!');
+console.log('📦 Products:', products.length);
+console.log('🛒 Cart Items:', cart.length);
+console.log('📋 Orders:', orders.length);
+console.log('👥 Users:', users.length);
+console.log('🔑 Admin Password:', ADMIN_PASSWORD);
+console.log('🔔 Features: Auth, Cart, Orders, Admin, Notifications, Sound Alerts');
