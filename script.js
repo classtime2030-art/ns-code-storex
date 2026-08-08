@@ -599,3 +599,301 @@ function toggleAdmin() {
     }
         }
 
+// ========== ADMIN LOGIN MODAL ==========
+function showAdminLogin() {
+    var modal = document.createElement('div');
+    modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);z-index:2000;display:flex;justify-content:center;align-items:center;';
+    modal.id = 'adminLoginModal';
+    
+    var innerHTML = '';
+    innerHTML += '<div style="background:#1e293b;padding:35px;border-radius:16px;max-width:420px;width:90%;border:1px solid #334155;">';
+    innerHTML += '<div style="text-align:center;font-size:50px;margin-bottom:15px;">🔐</div>';
+    innerHTML += '<h3 style="color:#3b82f6;margin-bottom:20px;text-align:center;">Admin Login</h3>';
+    innerHTML += '<div class="form-group">';
+    innerHTML += '<label style="color:#94a3b8;">Enter Password</label>';
+    innerHTML += '<input type="password" id="adminPassInput" placeholder="Enter admin password..." style="width:100%;padding:14px;background:#0f172a;border:1px solid #334155;color:white;border-radius:8px;font-size:16px;">';
+    innerHTML += '</div>';
+    innerHTML += '<p id="loginErr" style="color:#ef4444;display:none;margin-bottom:10px;text-align:center;">❌ Wrong password!</p>';
+    innerHTML += '<button onclick="verifyAdmin()" style="width:100%;background:#10b981;color:white;border:none;padding:14px;border-radius:8px;font-size:16px;cursor:pointer;font-weight:bold;margin-top:10px;">✅ Login as Admin</button>';
+    innerHTML += '<button onclick="closeAdminLogin()" style="width:100%;background:#334155;color:white;border:none;padding:12px;border-radius:8px;margin-top:10px;cursor:pointer;">Cancel</button>';
+    innerHTML += '</div>';
+    
+    modal.innerHTML = innerHTML;
+    document.body.appendChild(modal);
+    
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) modal.remove();
+    });
+    
+    setTimeout(function() {
+        var input = document.getElementById('adminPassInput');
+        if (input) input.focus();
+    }, 200);
+}
+
+function closeAdminLogin() {
+    var modal = document.getElementById('adminLoginModal');
+    if (modal) modal.remove();
+}
+
+// ========== VERIFY ADMIN PASSWORD ==========
+function verifyAdmin() {
+    var password = document.getElementById('adminPassInput').value;
+    
+    if (password === ADMIN_PASSWORD) {
+        adminLoggedIn = true;
+        sessionStorage.setItem('nsAdminLogin', 'true');
+        
+        var modal = document.getElementById('adminLoginModal');
+        if (modal) modal.remove();
+        
+        document.getElementById('adminBtn').textContent = '🔓 Exit Admin';
+        document.getElementById('adminBtn').style.background = '#10b981';
+        
+        showAdminPage();
+        updateAdminBadge();
+        showNotif('✅ Welcome Admin!', 'success');
+    } else {
+        document.getElementById('loginErr').style.display = 'block';
+        document.getElementById('adminPassInput').value = '';
+        document.getElementById('adminPassInput').focus();
+    }
+}
+
+// ========== SHOW ADMIN PAGE ==========
+function showAdminPage() {
+    if (!adminLoggedIn) {
+        showAdminLogin();
+        return;
+    }
+    
+    var allPages = document.querySelectorAll('.page');
+    for (var i = 0; i < allPages.length; i++) {
+        allPages[i].classList.remove('active');
+    }
+    document.getElementById('adminPage').classList.add('active');
+    showAdminTab('orders');
+}
+
+// ========== ADMIN TABS ==========
+function showAdminTab(tab) {
+    if (!adminLoggedIn) return;
+    
+    var tabs = document.querySelectorAll('.admin-tabs button');
+    for (var i = 0; i < tabs.length; i++) {
+        tabs[i].classList.remove('active-tab');
+    }
+    
+    if (tab === 'orders' && tabs[0]) tabs[0].classList.add('active-tab');
+    if (tab === 'products' && tabs[1]) tabs[1].classList.add('active-tab');
+    if (tab === 'users' && tabs[2]) tabs[2].classList.add('active-tab');
+    if (tab === 'stats' && tabs[3]) tabs[3].classList.add('active-tab');
+    
+    var content = document.getElementById('adminContent');
+    
+    if (tab === 'orders') showAdminOrders();
+    if (tab === 'products') showAdminProducts();
+    if (tab === 'users') showAdminUsers();
+    if (tab === 'stats') showAdminStats();
+}
+
+// ========== ADMIN ORDERS ==========
+function showAdminOrders() {
+    var content = document.getElementById('adminContent');
+    var pendingOrders = [];
+    
+    for (var i = 0; i < orders.length; i++) {
+        if (orders[i].status === 'pending') {
+            pendingOrders.push(orders[i]);
+        }
+    }
+    
+    var html = '<h4 style="margin-bottom:20px;font-size:18px;">⏳ Pending Orders (' + pendingOrders.length + ')</h4>';
+    
+    if (pendingOrders.length === 0) {
+        html += '<div style="text-align:center;padding:50px;background:#1e293b;border-radius:12px;">';
+        html += '<div style="font-size:60px;">✅</div>';
+        html += '<p style="color:#10b981;font-size:18px;">No pending orders!</p>';
+        html += '<p style="color:#94a3b8;">All caught up 🎉</p>';
+        html += '</div>';
+    } else {
+        for (var j = 0; j < pendingOrders.length; j++) {
+            var order = pendingOrders[j];
+            
+            html += '<div class="order-card" style="border-left:5px solid #f59e0b;margin-bottom:15px;">';
+            
+            // Order header
+            html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">';
+            html += '<div><h4 style="font-size:18px;">Order #' + order.id + '</h4>';
+            html += '<small style="color:#94a3b8;">📅 ' + order.date + '</small></div>';
+            html += '<span style="background:#f59e0b;color:black;padding:6px 14px;border-radius:20px;font-weight:bold;font-size:13px;">⏳ PENDING</span>';
+            html += '</div>';
+            
+            if (order.userUpiId) {
+                html += '<p style="color:#94a3b8;margin:5px 0;">👤 Customer UPI: <strong>' + order.userUpiId + '</strong></p>';
+            }
+            
+            if (order.userId) {
+                var customer = null;
+                for (var u = 0; u < users.length; u++) {
+                    if (users[u].id === order.userId) {
+                        customer = users[u];
+                        break;
+                    }
+                }
+                if (customer) {
+                    html += '<p style="color:#94a3b8;margin:5px 0;">👤 Customer: <strong>' + customer.name + '</strong> (' + customer.email + ')</p>';
+                }
+            }
+            
+            // Order items
+            html += '<div style="background:#0f172a;padding:15px;border-radius:10px;margin:12px 0;">';
+            for (var k = 0; k < order.items.length; k++) {
+                var item = order.items[k];
+                html += '<div style="display:flex;justify-content:space-between;padding:5px 0;">';
+                html += '<span>' + item.icon + ' ' + item.name + ' × ' + item.qty + '</span>';
+                html += '<span style="color:#3b82f6;">₹' + (item.price * item.qty) + '</span>';
+                html += '</div>';
+            }
+            html += '<hr style="border-color:#334155;margin:10px 0;">';
+            html += '<div style="display:flex;justify-content:space-between;">';
+            html += '<strong>Total:</strong>';
+            html += '<strong style="color:#10b981;font-size:20px;">₹' + order.total + '</strong>';
+            html += '</div></div>';
+            
+            // Screenshot
+            if (order.screenshot) {
+                html += '<div style="margin:12px 0;">';
+                html += '<strong style="color:#94a3b8;">📸 Payment Proof:</strong><br>';
+                html += '<img src="' + order.screenshot + '" style="max-width:250px;border-radius:8px;cursor:pointer;border:2px solid #334155;margin-top:5px;" onclick="window.open(this.src)">';
+                html += '</div>';
+            } else {
+                html += '<p style="color:#ef4444;">⚠️ No screenshot uploaded!</p>';
+            }
+            
+            // Action buttons
+            html += '<div style="display:flex;gap:12px;margin-top:18px;">';
+            html += '<button onclick="approveOrder(\'' + order.id + '\')" style="background:#10b981;color:white;border:none;padding:14px;border-radius:10px;flex:1;cursor:pointer;font-weight:bold;font-size:15px;">✅ Approve Payment</button>';
+            html += '<button onclick="rejectOrder(\'' + order.id + '\')" style="background:#ef4444;color:white;border:none;padding:14px;border-radius:10px;flex:1;cursor:pointer;font-weight:bold;font-size:15px;">❌ Reject</button>';
+            html += '</div>';
+            
+            html += '</div>';
+        }
+    }
+    
+    content.innerHTML = html;
+}
+
+// ========== APPROVE ORDER ==========
+function approveOrder(orderId) {
+    if (!confirm('✅ Approve this payment?\n\nCustomer will be able to download files.')) return;
+    
+    var order = null;
+    for (var i = 0; i < orders.length; i++) {
+        if (orders[i].id === orderId) {
+            order = orders[i];
+            break;
+        }
+    }
+    
+    if (order) {
+        order.status = 'approved';
+        order.approvedAt = new Date().toLocaleString();
+        saveAll();
+        showAdminOrders();
+        updateAdminBadge();
+        showNotif('✅ Order #' + orderId + ' approved!', 'success');
+    }
+}
+
+// ========== REJECT ORDER ==========
+function rejectOrder(orderId) {
+    var reason = prompt('❌ Reason for rejection:');
+    if (!reason) return;
+    
+    var order = null;
+    for (var i = 0; i < orders.length; i++) {
+        if (orders[i].id === orderId) {
+            order = orders[i];
+            break;
+        }
+    }
+    
+    if (order) {
+        order.status = 'rejected';
+        order.reason = reason;
+        order.rejectedAt = new Date().toLocaleString();
+        saveAll();
+        showAdminOrders();
+        updateAdminBadge();
+        showNotif('❌ Order #' + orderId + ' rejected', 'error');
+    }
+}
+
+// ========== ADMIN PRODUCTS ==========
+function showAdminProducts() {
+    var content = document.getElementById('adminContent');
+    
+    var html = '';
+    html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:25px;">';
+    html += '<h4 style="font-size:18px;">📦 Total Products: ' + products.length + '</h4>';
+    html += '<button onclick="showProductForm()" style="background:#10b981;color:white;border:none;padding:12px 24px;border-radius:10px;cursor:pointer;font-weight:bold;font-size:14px;">➕ Add New Product</button>';
+    html += '</div>';
+    
+    for (var i = 0; i < products.length; i++) {
+        var p = products[i];
+        
+        html += '<div class="order-card" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:15px;">';
+        html += '<div style="display:flex;align-items:center;gap:15px;flex:1;min-width:250px;">';
+        html += '<div style="font-size:45px;">' + p.icon + '</div>';
+        html += '<div>';
+        html += '<h4 style="font-size:16px;">' + p.name + '</h4>';
+        html += '<span class="product-category">' + p.category.toUpperCase() + '</span>';
+        html += '<p style="color:#94a3b8;font-size:13px;margin:5px 0;">' + p.desc + '</p>';
+        html += '<p>';
+        html += '<span style="color:#3b82f6;font-size:18px;font-weight:bold;">₹' + (p.salePrice || p.price) + '</span>';
+        if (p.salePrice) html += '<span class="old-price">₹' + p.price + '</span>';
+        if (p.featured) html += '<span style="color:#f59e0b;margin-left:8px;">⭐ Featured</span>';
+        if (p.downloadLink) {
+            html += '<span style="color:#10b981;margin-left:8px;font-size:12px;">🔗 Download Ready</span>';
+        } else {
+            html += '<span style="color:#ef4444;margin-left:8px;font-size:12px;">⚠️ No Link</span>';
+        }
+        html += '</p>';
+        html += '</div></div>';
+        
+        html += '<div style="display:flex;gap:10px;">';
+        html += '<button onclick="showProductForm(' + p.id + ')" style="background:#3b82f6;color:white;border:none;padding:10px 18px;border-radius:8px;cursor:pointer;font-size:13px;">✏️ Edit</button>';
+        html += '<button onclick="deleteProduct(' + p.id + ')" style="background:#ef4444;color:white;border:none;padding:10px 18px;border-radius:8px;cursor:pointer;font-size:13px;">🗑️ Delete</button>';
+        html += '</div>';
+        html += '</div>';
+    }
+    
+    content.innerHTML = html;
+}
+
+// ========== PRODUCT FORM ==========
+function showProductForm(productId) {
+    var product = null;
+    if (productId) {
+        for (var i = 0; i < products.length; i++) {
+            if (products[i].id === productId) {
+                product = products[i];
+                break;
+            }
+        }
+    }
+    
+    var isEdit = (product !== null);
+    
+    var modal = document.createElement('div');
+    modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);z-index:2000;display:flex;justify-content:center;align-items:center;padding:20px;';
+    modal.id = 'productFormModal';
+    
+    var html = '';
+    html += '<div style="background:#1e293b;padding:30px;border-radius:16px;max-width:550px;width:100%;max-height:85vh;overflow-y:auto;border:1px solid #334155;">';
+    
+    html += '<h3 style="color:#3b82f6;margin-bottom:25px;font-size:20px;">';
+    html += isEdit ? '✏️ Edit Product' : '➕ Add New Product';
+    html += '</h3>';
+    
